@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD com Firebase Firestore</title>
+  <link rel="stylesheet" href="style.css">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBBT4DqUz-TkSWEXoiunfpiMX66_5iLZwE",
+      authDomain: "crud-f52a5.firebaseapp.com",
+      projectId: "crud-f52a5",
+      storageBucket: "crud-f52a5.firebasestorage.app",
+      messagingSenderId: "48469541164",
+      appId: "1:48469541164:web:a2aac2a0cfb0fb91faac89",
+      measurementId: "G-F6C86HY3RF"
+    };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const userList = document.getElementById('userList');
+  const nameInput = document.getElementById('name');
+  const ageInput = document.getElementById('age');
+  const cityInput = document.getElementById('city');
+  const saveButton = document.getElementById('saveButton');
+  const successMessage = document.getElementById('successMessage');
+  const errorMessage = document.getElementById('errorMessage');
+  let editingDocId = null;
+
+  async function addUser() {
+    const name = nameInput.value;
+    const age = parseInt(ageInput.value);
+    const city = cityInput.value;
+
+    if (!name || !age || !city) {
+      showError('Por favor, preencha todos os campos!');
+      return;
+    }
+
+    if (isNaN(age) || age <= 0) {
+      showError('Por favor, insira uma idade válida!');
+      return;
+    }
+
+    saveButton.disabled = true;
+
+    try {
+      if (editingDocId) {
+        const docRef = doc(db, "usuarios", editingDocId);
+        const oldData = (await getDoc(docRef)).data();
+        await updateDoc(docRef, { nome: name, idade: age, cidade: city });
+        await addDoc(collection(db, "historico"), {
+          userId: editingDocId,
+          timestamp: serverTimestamp(),
+          tipo: "atualização",
+          dadosAtuais: { nome: name, idade: age, cidade: city },
+          dadosAnteriores: oldData
+        });
+        showSuccess('Usuário atualizado com sucesso!');
+      } else {
+        const userRef = await addDoc(collection(db, "usuarios"), { nome: name, idade: age, cidade: city, status: "ativo" });
+        await addDoc(collection(db, "historico"), {
+          userId: userRef.id,
+          timestamp: serverTimestamp(),
+          tipo: "criação",
+          dadosAtuais: { nome: name, idade: age, cidade: city }
+        });
+        showSuccess('Usuário adicionado com sucesso!');
+      }
+
+      loadUsers();
+      resetForm();
+    } catch (e) {
+      showError('Erro ao adicionar/atualizar usuário: ' + e.message);
+    } finally {
+      saveButton.disabled = false;
+    }
+  }
+
+  async function loadUsers() {
+    userList.innerHTML = '';
+    const querySnapshot = await getDocs(collection(db, "usuarios"));
+    querySnapshot.forEach((doc) => {
+      const user = doc.data();
+      if (user.status === "ativo") {
+        const userItem = document.createElement('li');
+        userItem.classList.add('user-item');
+        userItem.dataset.id = doc.id;
+        userItem.innerHTML = `
+          <span>${user.nome}, ${user.idade}, ${user.cidade}</span>
+          <button onclick="window.editUser('${doc.id}', '${user.nome}', '${user.idade}', '${user.cidade}')">Editar</button>
+          <button class="btn-delete" onclick="window.deleteUser('${doc.id}')">Excluir</button>
+        `;
+        userList.appendChild(userItem);
+      }
+    });
+  }
+
+  function editUser(docId, nome, idade, cidade) {
+    nameInput.value = nome;
+    ageInput.value = idade;
+    cityInput.value = cidade;
+    editingDocId = docId;
+    saveButton.textContent = 'Salvar Alterações';
+  }
+
+  async function deleteUser(docId) {
+    saveButton.disabled = true;
+    try {
+      const docRef = doc(db, "usuarios", docId);
+      const oldData = (await getDoc(docRef)).data();
+      await updateDoc(docRef, { status: "excluido" });
+      await addDoc(collection(db, "historico"), {
+        userId: docRef.id,
+        timestamp: serverTimestamp(),
+        tipo: "exclusão",
+        dadosAtuais: oldData
+      });
+      showSuccess('Usuário excluído com sucesso!');
+      loadUsers();
+    } catch (e) {
+      showError('Erro ao excluir usuário: ' + e.message);
+    } finally {
+      saveButton.disabled = false;
+    }
+  }
+
+  function resetForm() {
+    nameInput.value = '';
+    ageInput.value = '';
+    cityInput.value = '';
+    editingDocId = null;
+    saveButton.textContent = 'Adicionar';
+  }
+
+  function showSuccess(message) {
+    successMessage.textContent = message;
+    successMessage.style.display = 'block';
+    errorMessage.style.display = 'none';
+  }
+
+  function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    successMessage.style.display = 'none';
+  }
+
+  loadUsers();
+  saveButton.addEventListener('click', addUser);
+
+  window.editUser = editUser;
+  window.deleteUser = deleteUser;
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>ADICIONAR UM USUÁRIO</h1>
+
+    <div class="form-container">
+      <input id="name" type="text" placeholder="Nome" />
+      <input id="age" type="number" placeholder="Idade" />
+      <input id="city" type="text" placeholder="Cidade" />
+      <button id="saveButton" class="btn-save">Adicionar</button>
+    </div>
+
+    <div id="successMessage" class="message success"></div>
+    <div id="errorMessage" class="message error"></div>
+
+    <ul id="userList" class="user-list"></ul>
+  </div>
+</body>
+</html>

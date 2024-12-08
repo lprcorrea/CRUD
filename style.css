@@ -1,0 +1,116 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background-color: rgba(0, 0, 0, 0.8); /* Fundo preto com leve opacidade */
+  backdrop-filter: blur(10px); /* Efeito de desfoque */
+  border: 1px solid white;
+  border-radius: 4px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 400px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+/* Animação para os inputs */
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px); /* Começa um pouco à esquerda */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0); /* Termina na posição original */
+  }
+}
+
+input {
+  margin: 8px 0;
+  padding: 10px;
+  border: 1px solid white; /* Borda branca */
+  border-radius: 4px; /* Bordas com raio de 4px */
+  font-size: 12px;
+  background-color: black; /* Fundo transparente com leve opacidade */
+  color: white;
+  font-family: Arial, Verdana, geneva, san-serif;
+  animation: slideIn 0.6s ease-out; /* Aplica a animação */
+}
+
+button {
+  padding: 10px;
+  background-color: white; /* Botão branco */
+  color: black; /* Texto preto */
+  border: none;
+  border-radius: 4px; /* Bordas com raio de 4px */
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #ddd; /* Cinza claro ao passar o mouse */
+}
+
+.message {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px; /* Bordas com raio de 4px */
+}
+
+.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.user-list {
+  list-style-type: none;
+  margin-bottom: 20px;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  padding: 8px;
+  margin-bottom: 10px;
+  transition: opacity 0.5s ease;
+}
+
+button.btn-delete {
+  color: red;
+}
+
+button.btn-delete:hover {
+  background-color: #c82333;
+}
